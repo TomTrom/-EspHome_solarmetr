@@ -11,10 +11,10 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: "DETcmBEcZLfGtpDDu+c0EgE58fArVwaILA8r9cDapdU="
+    key: "**********************"
 
 ota:
-  password: "a3da554fd6ae91cdd799f9122616ae67"
+  password: "*****************"
 
 wifi:
   ssid: !secret wifi_ssid
