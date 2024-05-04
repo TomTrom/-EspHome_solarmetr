@@ -1,0 +1,91 @@
+#########################################################################
+################################PROGRAM################################## 
+
+
+# Web rerver
+web_server:
+  port: 80    
+
+
+# Tlačítka pro restart a nouzový režim
+button:
+  - platform: restart
+    name: "Restart Device"
+  - platform: safe_mode
+    name: "Restart in Safe Mode"  
+
+# Informace o wifi
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: ESP IP Address
+    ssid:
+      name: ESP Connected SSID
+    scan_results:
+      name: ESP Latest Scan Results
+   
+
+
+# Individual sensors
+sensor:
+
+  - platform: adc
+    pin: A0
+    name: "Napeti na panelu"
+    id: napeti_panelu
+    update_interval: 200ms
+    filters:
+      #- multiply: 3.3  # pro wemos
+      - offset: -0.002  # kalibrace
+      - median:          
+          window_size: 10
+          send_every: 5
+          send_first_at: 3
+    internal: False      
+
+  - platform: copy
+    source_id: napeti_panelu
+    name: proud 
+    id: proud       
+    filters:
+      - multiply: 1.04  # koeficient ucinosti panelu oproti skusebnimu 17%
+      - lambda: return (x / 4.7) *1000;  # I = U / R
+    unit_of_measurement: "mA" 
+    internal: False
+
+  - platform: copy
+    source_id: proud
+    name: procent
+    id: procent
+    state_class: measurement
+    icon: mdi:solar-power
+    accuracy_decimals: 0
+    filters: 
+      - lambda: return x / 160 * 100; # vypocet procent
+    unit_of_measurement: "%" 
+
+  - platform: copy
+    source_id: procent
+    name: vykon
+    id: vykon
+    state_class: measurement
+    icon: mdi:solar-power
+    accuracy_decimals: 1
+    filters: 
+      - lambda: return x / 100 * 3550;  # * WP panelu
+    unit_of_measurement: "W"
+
+
+  - platform: template
+    name: 10MIN
+    state_class: measurement
+    icon: mdi:solar-power
+    accuracy_decimals: 0
+    update_interval: 30s
+    lambda: |- 
+      return id(procent).state;
+    filters:
+      - median:
+          window_size: 20
+          send_every: 20
+    unit_of_measurement: "%"   
